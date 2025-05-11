@@ -6,19 +6,20 @@ import {
   type SubmitErrorHandler,
 } from "react-hook-form";
 import InfiniteScroll from "react-infinite-scroller";
-import type { ApiResponse } from "./types";
+import type { SuccessApiResponse, ErrorApiResponse } from "./types";
 import { mockApiResponse } from "./mockApiResponse";
 
 const GH_API_URL = "https://api.github.com";
 const GH_API_VER = "2022-11-28";
+const nextPageRegex = /<.*&page=(.*)>; rel="next"/;
 
 // Adding a mock variant to not exhaust GitHub's API limits too frequently in dev
-const isUsingMockData = true;
+const isUsingMockData = false;
 
 async function fetchUsers(
   userName: string,
   page: number
-): Promise<ApiResponse> {
+): Promise<SuccessApiResponse> {
   console.log(`fetching users for query: "${userName}", page: ${page}`);
 
   if (isUsingMockData) {
@@ -33,19 +34,34 @@ async function fetchUsers(
         ...el,
         id: el.id + page, // Making mock data's repeated ids unique to make them valid React keys
       })),
+      nextPage: page < 10 ? page + 1 : undefined,
     };
   }
 
   console.log("fetching REAL data from GitHub!");
 
-  // TODO: the `page` param should be parsed from the response headers
-  return fetch(`${GH_API_URL}/search/users?q=${userName}&page=${page}`, {
-    headers: {
-      // Specifying the API version as per:
-      // https://docs.github.com/en/rest/about-the-rest-api/api-versions?apiVersion=2022-11-28#specifying-an-api-version
-      "X-GitHub-Api-Version": GH_API_VER,
-    },
-  }).then((res) => res.json());
+  const response = await fetch(
+    `${GH_API_URL}/search/users?q=${userName}&page=${page}`,
+    {
+      headers: {
+        // Specifying the API version as per:
+        // https://docs.github.com/en/rest/about-the-rest-api/api-versions?apiVersion=2022-11-28#specifying-an-api-version
+        "X-GitHub-Api-Version": GH_API_VER,
+      },
+    }
+  );
+  const nextPageResult = response.headers.get("link")?.match(nextPageRegex);
+  const nextPage = nextPageResult && parseInt(nextPageResult[1], 10);
+  const json = await response.json();
+
+  if (!response.ok) {
+    throw new Error((json as ErrorApiResponse).message);
+  }
+
+  return {
+    ...json,
+    nextPage,
+  };
 }
 
 function Results({ userName }: { userName: string }) {
@@ -54,6 +70,8 @@ function Results({ userName }: { userName: string }) {
     isFetchingNextPage,
     isPending,
     isError,
+    isFetchNextPageError,
+    error,
     data,
     fetchNextPage,
     hasNextPage,
@@ -61,35 +79,42 @@ function Results({ userName }: { userName: string }) {
     queryKey: ["users", userName],
     queryFn: async ({ pageParam }) => await fetchUsers(userName, pageParam),
     enabled: userName.length >= 3,
+    retry: false, // Curbing our assault on GitHub's API a bit
     initialPageParam: 1, // GitHub's pagination starts at 1
-    getNextPageParam: (lastPage, _allPages, lastPageParam) => {
-      // TODO: look into what the correct condition here should be
-      if (!lastPage.items.length) {
-        return undefined;
-      }
-
-      return lastPageParam + 1;
-    },
+    getNextPageParam: (lastPage) => lastPage.nextPage,
   });
   const users = data?.pages.flatMap((page) => page.items);
 
-  if (isError) {
-    return <div>Error fetching users!</div>;
+  if (isError && !isFetchNextPageError) {
+    return (
+      <i>
+        Error fetching user data!
+        <br />
+        (Error: {error.message})
+      </i>
+    );
   }
 
   if (isFetching && !isFetchingNextPage) {
-    return <div>Fetching users for query "{userName}"...</div>;
+    return <i>Fetching users for query "{userName}"...</i>;
   }
 
   if (isPending) {
-    return <div>Users not fetched yet</div>;
+    return <i>No users fetched yet</i>;
   }
 
-  if (!users) {
-    return <div>No users found :/</div>;
+  if (!users?.length) {
+    return <i>No users found :/</i>;
   }
 
   const loadMoreUsers = async () => {
+    if (isFetchNextPageError) {
+      console.log(
+        "there was an error fetching the next page, `loadMoreUsers` won't be called anymore"
+      );
+      return;
+    }
+
     if (isFetchingNextPage) {
       console.log("another fetch is in progress, aborting `loadMoreUsers` fn");
       return;
@@ -107,8 +132,8 @@ function Results({ userName }: { userName: string }) {
       <InfiniteScroll
         pageStart={0} // TODO: look into this
         loadMore={loadMoreUsers}
-        hasMore={hasNextPage}
-        loader={<div key={0}>Loading more users...</div>}
+        hasMore={hasNextPage && !isFetchNextPageError}
+        loader={<i key={0}>Loading more users...</i>}
       >
         <ol>
           {users.map(({ id, login }) => (
@@ -116,6 +141,20 @@ function Results({ userName }: { userName: string }) {
           ))}
         </ol>
       </InfiniteScroll>
+      {!hasNextPage && (
+        <small>
+          <i>(No more users to fetch for the provided query.)</i>
+        </small>
+      )}
+      {isFetchNextPageError && (
+        <small>
+          <i>
+            Error fetching the next page! No further fetches will be performed.
+            <br />
+            (Error: {error.message})
+          </i>
+        </small>
+      )}
     </>
   );
 }

@@ -24,8 +24,23 @@ type User = {
   score: number;
 };
 
-export type ApiResponse = {
+type ApiResponse = {
   total_count: number;
   incomplete_results: boolean;
   items: User[];
+};
+
+export type SuccessApiResponse = ApiResponse & {
+  /**
+   * Note: this field is not part of the actual JSON returned by GitHub;
+   * GitHub provides the pagination via the HTTP `Link` header.
+   * We read that header and inject the value into the response object during parsing,
+   * in order to make GH's pagination play nicely with `react-query`'s API.
+   */
+  nextPage?: number;
+};
+
+export type ErrorApiResponse = {
+  message: string;
+  documentation_url?: string;
 };
