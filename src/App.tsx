@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useForm, type SubmitHandler } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
 import InfiniteScroll from "react-infinite-scroller";
+import { object, string, type InferType } from "yup";
 import type { SuccessApiResponse, ErrorApiResponse } from "./types";
 import { mockApiResponse } from "./mockApiResponse";
 import { useDebounce } from "./hooks/useDebounce";
@@ -157,14 +159,17 @@ function Results({ userName }: { userName: string }) {
   );
 }
 
-type Inputs = {
-  userName: string;
-};
+const schema = object()
+  .shape({
+    userName: string().required().min(3),
+  })
+  .required();
+
+type Inputs = InferType<typeof schema>;
 
 const defaultValues: Inputs = {
   userName: "",
 };
-
 const DEBOUNCE_AMOUNT_MS = 2000;
 
 function App() {
@@ -176,6 +181,7 @@ function App() {
   } = useForm<Inputs>({
     defaultValues,
     mode: "onChange",
+    resolver: yupResolver(schema),
   });
 
   const onSubmit: SubmitHandler<Inputs> = useCallback((data) => {
@@ -201,14 +207,8 @@ function App() {
 
       <form>
         <div>
-          <input
-            placeholder="GitHub username"
-            {...register("userName", {
-              required: true,
-              minLength: 3,
-            })}
-          />
-          {errors.userName && <div>This field is invalid!</div>}
+          <input placeholder="GitHub username" {...register("userName")} />
+          {errors.userName && <div>{errors.userName.message}</div>}
         </div>
       </form>
 
