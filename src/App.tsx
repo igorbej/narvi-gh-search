@@ -1,10 +1,6 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import {
-  useForm,
-  type SubmitHandler,
-  type SubmitErrorHandler,
-} from "react-hook-form";
+import { useForm } from "react-hook-form";
 import InfiniteScroll from "react-infinite-scroller";
 import type { SuccessApiResponse, ErrorApiResponse } from "./types";
 import { mockApiResponse } from "./mockApiResponse";
@@ -20,7 +16,7 @@ async function fetchUsers(
   userName: string,
   page: number
 ): Promise<SuccessApiResponse> {
-  console.log(`fetching users for query: "${userName}", page: ${page}`);
+  console.warn(`fetching users for query: "${userName}", page: ${page}`);
 
   if (isUsingMockData) {
     console.log("using MOCKED data!");
@@ -163,39 +159,52 @@ type Inputs = {
   userName: string;
 };
 
+const defaultValues: Inputs = {
+  userName: "",
+};
+
 function App() {
   const [userName, setUserName] = useState("");
   const {
     register,
     handleSubmit,
-    formState: { errors },
-  } = useForm<Inputs>();
+    formState: { isValidating, isValid, errors },
+  } = useForm<Inputs>({
+    defaultValues,
+    mode: "onChange",
+  });
 
-  const onValid: SubmitHandler<Inputs> = (data) => {
-    console.log("form valid, data:", data);
-    setUserName(data.userName);
-  };
+  const submitForm = useMemo(
+    () =>
+      handleSubmit((data) => {
+        setUserName(data.userName);
+      }),
+    [handleSubmit]
+  );
 
-  const onInvalid: SubmitErrorHandler<Inputs> = (errors) => {
-    console.log("form invalid, errors:", errors);
-  };
+  useEffect(() => {
+    if (!isValidating && isValid) {
+      console.log("(useEffect) submitting form!");
+      submitForm();
+    }
+  }, [isValidating, isValid, submitForm]);
 
   return (
     <>
       <h1>GitHub user search</h1>
       <h2>Narvi recruitment assignment</h2>
 
-      <form onSubmit={handleSubmit(onValid, onInvalid)}>
+      <form>
         <div>
           <input
             placeholder="GitHub username"
             {...register("userName", {
               required: true,
+              minLength: 3,
             })}
           />
           {errors.userName && <div>This field is invalid!</div>}
         </div>
-        <input type="submit" />
       </form>
 
       <h3>Results:</h3>
