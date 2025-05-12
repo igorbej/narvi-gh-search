@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { useForm, type SubmitHandler } from "react-hook-form";
 import InfiniteScroll from "react-infinite-scroller";
 import type { SuccessApiResponse, ErrorApiResponse } from "./types";
 import { mockApiResponse } from "./mockApiResponse";
+import { useDebounce } from "./hooks/useDebounce";
 
 const GH_API_URL = "https://api.github.com";
 const GH_API_VER = "2022-11-28";
@@ -20,9 +21,6 @@ async function fetchUsers(
 
   if (isUsingMockData) {
     console.log("using MOCKED data!");
-
-    // TODO: artificial delay too see loading states, remove later
-    await new Promise((res) => setTimeout(res, 1000));
 
     return {
       ...mockApiResponse,
@@ -163,6 +161,8 @@ const defaultValues: Inputs = {
   userName: "",
 };
 
+const DEBOUNCE_AMOUNT_MS = 2000;
+
 function App() {
   const [userName, setUserName] = useState("");
   const {
@@ -174,12 +174,13 @@ function App() {
     mode: "onChange",
   });
 
+  const onSubmit: SubmitHandler<Inputs> = useCallback((data) => {
+    setUserName(data.userName);
+  }, []);
+  const onSubmitDebounced = useDebounce(onSubmit, DEBOUNCE_AMOUNT_MS);
   const submitForm = useMemo(
-    () =>
-      handleSubmit((data) => {
-        setUserName(data.userName);
-      }),
-    [handleSubmit]
+    () => handleSubmit(onSubmitDebounced),
+    [handleSubmit, onSubmitDebounced]
   );
 
   useEffect(() => {
