@@ -17,10 +17,12 @@ async function fetchUsers(
   userName: string,
   page: number
 ): Promise<SuccessApiResponse> {
-  console.warn(`fetching users for query: "${userName}", page: ${page}`);
+  console.warn(
+    `(fetchUsers) fetching users for query: "${userName}", page: ${page}`
+  );
 
   if (isUsingMockData) {
-    console.log("using MOCKED data!");
+    console.log("(fetchUsers) using MOCKED data!");
 
     return {
       ...mockApiResponse,
@@ -32,7 +34,7 @@ async function fetchUsers(
     };
   }
 
-  console.log("fetching REAL data from GitHub!");
+  console.log("(fetchUsers) fetching REAL data from GitHub!");
 
   const response = await fetch(
     `${GH_API_URL}/search/users?q=${userName}&page=${page}`,
@@ -104,19 +106,21 @@ function Results({ userName }: { userName: string }) {
   const loadMoreUsers = async () => {
     if (isFetchNextPageError) {
       console.log(
-        "there was an error fetching the next page, `loadMoreUsers` won't be called anymore"
+        "(loadMoreUsers) there was an error fetching the next page, `loadMoreUsers` won't be called anymore"
       );
       return;
     }
 
     if (isFetchingNextPage) {
-      console.log("another fetch is in progress, aborting `loadMoreUsers` fn");
+      console.log(
+        "(loadMoreUsers) another fetch is in progress, stopping the function"
+      );
       return;
     }
 
-    console.log("loading more users...");
+    console.log("(loadMoreUsers) loading...");
     await fetchNextPage();
-    console.log("more users loaded!");
+    console.log("(loadMoreUsers) more users loaded!");
   };
 
   return (
