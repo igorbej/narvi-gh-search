@@ -4,6 +4,11 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import InfiniteScroll from "react-infinite-scroller";
 import { object, string, type InferType } from "yup";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+import Container from "@mui/material/Container";
+import Stack from "@mui/material/Stack";
+import { styled } from "@mui/material/styles";
 import { useDebounce } from "./hooks/useDebounce";
 import { fetchUsers } from "./api/fetchUsers";
 
@@ -34,24 +39,38 @@ function Results({ userName }: { userName: string }) {
 
   if (isError && !isFetchNextPageError) {
     return (
-      <i>
+      <Typography fontStyle="italic">
         Error fetching user data!
         <br />
-        (Error: {error.message})
-      </i>
+        <Typography variant="caption">(Error: {error.message})</Typography>
+      </Typography>
     );
   }
 
   if (isFetching && !isFetchingNextPage) {
-    return <i>Fetching users for query "{userName}"...</i>;
+    return (
+      <Typography fontStyle="italic">
+        Looking for users matching "{userName}"...
+      </Typography>
+    );
   }
 
   if (isPending) {
-    return <i>No users fetched yet</i>;
+    return (
+      <Typography fontStyle="italic">
+        No user data fetched yet
+        <br />
+        <Typography variant="caption">Start typing to search</Typography>
+      </Typography>
+    );
   }
 
   if (!users?.length) {
-    return <i>No users found :/</i>;
+    return (
+      <Typography fontStyle="italic">
+        No users for the given query found :/
+      </Typography>
+    );
   }
 
   const loadMoreUsers = async () => {
@@ -76,13 +95,21 @@ function Results({ userName }: { userName: string }) {
 
   return (
     <>
-      <div>Queried value: {userName}</div>
-      {shouldUseMockData && <small>⚠️ Note: displaying mock data</small>}
+      <Typography>Queried value: "{userName}"</Typography>
+      {shouldUseMockData && (
+        <Typography variant="caption">
+          ⚠️ Note: displaying hard-coded mock data
+        </Typography>
+      )}
       <InfiniteScroll
         pageStart={0} // TODO: look into this
         loadMore={loadMoreUsers}
         hasMore={hasNextPage && !isFetchNextPageError}
-        loader={<i key={0}>Loading more users...</i>}
+        loader={
+          <Typography key={0} fontStyle="italic">
+            Loading more users...
+          </Typography>
+        }
       >
         <ol>
           {users.map(({ id, login }) => (
@@ -91,18 +118,18 @@ function Results({ userName }: { userName: string }) {
         </ol>
       </InfiniteScroll>
       {!hasNextPage && (
-        <small>
-          <i>(No more users to fetch for the provided query.)</i>
-        </small>
+        <Typography fontStyle="italic">
+          There are no more users matching the provided query.
+        </Typography>
       )}
       {isFetchNextPageError && (
-        <small>
-          <i>
+        <>
+          <Typography fontStyle="italic">
             Error fetching the next page! No further fetches will be performed.
             <br />
-            (Error: {error.message})
-          </i>
-        </small>
+            <Typography variant="caption">(Error: {error.message})</Typography>
+          </Typography>
+        </>
       )}
     </>
   );
@@ -150,21 +177,40 @@ function App() {
   }, [isValidating, isValid, submitForm]);
 
   return (
-    <>
-      <h1>GitHub user search</h1>
-      <h2>Narvi recruitment assignment</h2>
+    <Container>
+      <Stack justifyContent="space-between" alignItems="stretch">
+        <Typography variant="h3" mb="1rem">
+          GitHub user search
+        </Typography>
+        <Typography variant="h5" mb="3rem">
+          Narvi recruitment assignment
+        </Typography>
 
-      <form>
-        <div>
-          <input placeholder="GitHub username" {...register("userName")} />
-          {errors.userName && <div>{errors.userName.message}</div>}
-        </div>
-      </form>
+        <Stack direction="row" justifyContent="center">
+          <StyledForm>
+            <TextField
+              fullWidth
+              label="GitHub username"
+              error={!!errors.userName}
+              helperText={errors.userName?.message}
+              {...register("userName")}
+            />
+          </StyledForm>
+        </Stack>
 
-      <h3>Results:</h3>
-      <Results userName={userName} />
-    </>
+        <Typography variant="h5" mb="2rem">
+          Results:
+        </Typography>
+        <Results userName={userName} />
+      </Stack>
+    </Container>
   );
 }
 
 export default App;
+
+const StyledForm = styled("form", { label: "StyledForm" })(() => ({
+  marginBottom: "3rem",
+  maxWidth: 350,
+  flexGrow: 1,
+}));
