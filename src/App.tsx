@@ -4,63 +4,11 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import InfiniteScroll from "react-infinite-scroller";
 import { object, string, type InferType } from "yup";
-import type { SuccessApiResponse, ErrorApiResponse } from "./types";
-import { mockApiResponse } from "./mockApiResponse";
 import { useDebounce } from "./hooks/useDebounce";
-
-const GH_API_URL = "https://api.github.com";
-const GH_API_VER = "2022-11-28";
-const nextPageRegex = /<.*&page=(.*)>; rel="next"/;
+import { fetchUsers } from "./api/fetchUsers";
 
 // Adding a mock variant to not exhaust GitHub's API limits too frequently in dev
-const isUsingMockData = false;
-
-async function fetchUsers(
-  userName: string,
-  page: number
-): Promise<SuccessApiResponse> {
-  console.warn(
-    `(fetchUsers) fetching users for query: "${userName}", page: ${page}`
-  );
-
-  if (isUsingMockData) {
-    console.log("(fetchUsers) using MOCKED data!");
-
-    return {
-      ...mockApiResponse,
-      items: mockApiResponse.items.map((el) => ({
-        ...el,
-        id: el.id + page, // Making mock data's repeated ids unique to make them valid React keys
-      })),
-      nextPage: page < 10 ? page + 1 : undefined,
-    };
-  }
-
-  console.log("(fetchUsers) fetching REAL data from GitHub!");
-
-  const response = await fetch(
-    `${GH_API_URL}/search/users?q=${userName}&page=${page}`,
-    {
-      headers: {
-        // Specifying the API version as per:
-        // https://docs.github.com/en/rest/about-the-rest-api/api-versions?apiVersion=2022-11-28#specifying-an-api-version
-        "X-GitHub-Api-Version": GH_API_VER,
-      },
-    }
-  );
-  const nextPageResult = response.headers.get("link")?.match(nextPageRegex);
-  const nextPage = nextPageResult && parseInt(nextPageResult[1], 10);
-  const json = await response.json();
-
-  if (!response.ok) {
-    throw new Error((json as ErrorApiResponse).message);
-  }
-
-  return {
-    ...json,
-    nextPage,
-  };
-}
+const shouldUseMockData = false;
 
 function Results({ userName }: { userName: string }) {
   const {
@@ -75,7 +23,8 @@ function Results({ userName }: { userName: string }) {
     hasNextPage,
   } = useInfiniteQuery({
     queryKey: ["users", userName],
-    queryFn: async ({ pageParam }) => await fetchUsers(userName, pageParam),
+    queryFn: async ({ pageParam }) =>
+      await fetchUsers(userName, pageParam, shouldUseMockData),
     enabled: userName.length >= 3,
     retry: false, // Curbing our assault on GitHub's API a bit
     initialPageParam: 1, // GitHub's pagination starts at 1
@@ -128,7 +77,7 @@ function Results({ userName }: { userName: string }) {
   return (
     <>
       <div>Queried value: {userName}</div>
-      {isUsingMockData && <small>⚠️ Note: displaying mock data</small>}
+      {shouldUseMockData && <small>⚠️ Note: displaying mock data</small>}
       <InfiniteScroll
         pageStart={0} // TODO: look into this
         loadMore={loadMoreUsers}
