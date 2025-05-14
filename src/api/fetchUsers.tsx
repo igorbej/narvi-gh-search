@@ -9,7 +9,8 @@ const nextPageRegex = /<.*&page=(.*)>; rel="next"/;
 export async function fetchUsers(
   userName: string,
   page: number,
-  shouldUseMockData: boolean
+  shouldUseMockData: boolean,
+  signal: AbortSignal
 ): Promise<SuccessApiResponse> {
   console.warn(
     `(fetchUsers) fetching users for query: "${userName}", page: ${page}`
@@ -45,6 +46,7 @@ export async function fetchUsers(
         // https://docs.github.com/en/rest/about-the-rest-api/api-versions?apiVersion=2022-11-28#specifying-an-api-version
         "X-GitHub-Api-Version": GH_API_VER,
       },
+      signal,
     }
   );
   const nextPageResult = response.headers.get("link")?.match(nextPageRegex);

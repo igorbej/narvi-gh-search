@@ -28,8 +28,8 @@ function Results({ userName }: { userName: string }) {
     hasNextPage,
   } = useInfiniteQuery({
     queryKey: ["users", userName],
-    queryFn: async ({ pageParam }) =>
-      await fetchUsers(userName, pageParam, shouldUseMockData),
+    queryFn: async ({ pageParam, signal }) =>
+      await fetchUsers(userName, pageParam, shouldUseMockData, signal),
     enabled: userName.length >= 3,
     retry: false, // Curbing our assault on GitHub's API a bit
     initialPageParam: 1, // GitHub's pagination starts at 1
