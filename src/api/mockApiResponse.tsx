@@ -735,7 +735,7 @@ export const mockApiResponse = {
       score: 1.0,
     },
     {
-      login: "=========== LAST USER OF THIS PAGE ===========",
+      login: "== LAST USER OF THIS PAGE ==",
       id: 9335372,
       node_id: "MDQ6VXNlcjkzMzUzNzI=",
       avatar_url: "https://avatars.githubusercontent.com/u/9335372?v=4",
