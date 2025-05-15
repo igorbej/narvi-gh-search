@@ -3,7 +3,7 @@ import { boolean, object, string, number, array } from "yup";
 // Only including the fields I'm actually receiving from the API for now (i.e., the required ones).
 // TODO: Consider adding spec for the full schema later:
 // https://docs.github.com/en/rest/search/search?apiVersion=2022-11-28#search-users
-const userSchema = object({
+export const userSchema = object({
   login: string().required(),
   id: number().required(),
   node_id: string().required(),
