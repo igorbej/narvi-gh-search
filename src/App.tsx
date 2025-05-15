@@ -6,7 +6,7 @@ import InfiniteScroll from "react-infinite-scroller";
 import { object, string, type InferType } from "yup";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import Container from "@mui/material/Container";
+import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
@@ -14,6 +14,9 @@ import ListItemText from "@mui/material/ListItemText";
 import ListItemAvatar from "@mui/material/ListItemAvatar";
 import Avatar from "@mui/material/Avatar";
 import Link from "@mui/material/Link";
+import Alert from "@mui/material/Alert";
+import AlertTitle from "@mui/material/AlertTitle";
+import CircularProgress from "@mui/material/CircularProgress";
 import { styled } from "@mui/material/styles";
 import { useDebounce } from "./hooks/useDebounce";
 import { fetchUsers } from "./api/fetchUsers";
@@ -45,50 +48,47 @@ function Results({ userName }: { userName: string }) {
 
   if (isError && !isFetchNextPageError) {
     return (
-      <Typography component="div" fontStyle="italic">
-        <Typography>Error fetching user data!</Typography>
-        <Typography variant="caption">(Error: {error.message})</Typography>
-      </Typography>
+      <StyledAlert severity="error">
+        <AlertTitle>Error fetching user data!</AlertTitle>
+        (Error: {error.message})
+      </StyledAlert>
     );
   }
 
   if (isFetching && !isFetchingNextPage) {
     return (
-      <Typography fontStyle="italic">
+      <StyledAlert severity="info">
         Looking for users matching "{userName}"...
-      </Typography>
+      </StyledAlert>
     );
   }
 
   if (isPending) {
     return (
-      <Typography component="div" fontStyle="italic">
-        <Typography>No user data fetched yet</Typography>
-        <Typography variant="caption">Start typing to search</Typography>
-      </Typography>
+      <StyledAlert severity="info">
+        <AlertTitle>No user data fetched yet</AlertTitle>
+        Start typing to search
+      </StyledAlert>
     );
   }
 
   if (!users?.length) {
     return (
-      <Typography fontStyle="italic">
-        No users for the given query found :/
-      </Typography>
+      <StyledAlert severity="info">
+        <AlertTitle>No users for the given query found ☹️</AlertTitle>
+        Wanna give it another go?
+      </StyledAlert>
     );
   }
 
   const loadMoreUsers = async () => {
     if (isFetchNextPageError) {
-      console.log(
-        "(loadMoreUsers) there was an error fetching the next page, `loadMoreUsers` won't be called anymore"
-      );
+      console.log("(loadMoreUsers) there was an error fetching the next page");
       return;
     }
 
     if (isFetchingNextPage) {
-      console.log(
-        "(loadMoreUsers) another fetch is in progress, stopping the function"
-      );
+      console.log("(loadMoreUsers) another fetch in progress, stopping the fn");
       return;
     }
 
@@ -98,8 +98,10 @@ function Results({ userName }: { userName: string }) {
   };
 
   return (
-    <Stack alignItems="center">
-      <Typography>Queried value: "{userName}"</Typography>
+    <Stack>
+      <Typography variant="h5">
+        Results for: <b>"{userName}"</b>
+      </Typography>
       {shouldUseMockData && (
         <Typography variant="caption">
           ⚠️ Note: displaying hard-coded mock data
@@ -109,24 +111,28 @@ function Results({ userName }: { userName: string }) {
         pageStart={0} // TODO: look into this
         loadMore={loadMoreUsers}
         hasMore={hasNextPage && !isFetchNextPageError}
-        loader={
-          <Typography key={0} fontStyle="italic">
-            Loading more users...
-          </Typography>
-        }
+        loader={<CircularProgress key="loader-key" size="1.5rem" />}
       >
         <List>
-          {users.map(({ id, login, avatar_url, html_url }) => (
-            <ListItem key={id} alignItems="flex-start" sx={{ p: "0.5rem" }}>
-              <ListItemAvatar>
-                <Avatar alt={login} src={avatar_url} />
+          {users.map(({ id, login, type, avatar_url, html_url }) => (
+            <StyledListItem key={id} alignItems="flex-start">
+              <ListItemAvatar sx={{ m: 0, mr: 1.5 }}>
+                <StyledAvatar alt={login} src={avatar_url} />
               </ListItemAvatar>
+
               <StyledListItemText
                 primary={login}
                 secondary={
                   <>
-                    <Typography variant="body2">{id}</Typography>
+                    <Typography
+                      variant="body2"
+                      color="textSecondary"
+                      fontSize="0.75rem"
+                    >
+                      {id}
+                    </Typography>
                     <Link
+                      variant="body2"
                       href={html_url}
                       display="block" // Making sure links can get ellipsized too, if need be
                     >
@@ -136,40 +142,59 @@ function Results({ userName }: { userName: string }) {
                 }
                 slots={{ secondary: "div" }}
               />
-            </ListItem>
+              <StyledChip label={type} variant="outlined" size="small" />
+            </StyledListItem>
           ))}
         </List>
       </StyledInfiniteScroll>
       {!hasNextPage && (
-        <Typography fontStyle="italic">
-          There are no more users matching the provided query.
-        </Typography>
+        <StyledAlert severity="info">
+          There are no more users matching the query.
+        </StyledAlert>
       )}
       {isFetchNextPageError && (
-        <>
-          <Typography component="div" fontStyle="italic">
-            <Typography>
-              Error fetching the next page! No further fetches will be
-              performed.
-            </Typography>
-            <Typography variant="caption">(Error: {error.message})</Typography>
-          </Typography>
-        </>
+        <StyledAlert severity="warning">
+          <AlertTitle>Error fetching the next page!</AlertTitle>
+          Error: {error.message}
+        </StyledAlert>
       )}
     </Stack>
   );
 }
 
+const StyledAlert = styled(Alert, {
+  label: "StyledAlert",
+})(() => ({
+  alignSelf: "center",
+}));
+
 const StyledInfiniteScroll = styled(InfiniteScroll, {
   label: "StyledInfiniteScroll",
-})(() => ({
-  margin: "1rem 0",
-  maxWidth: 450,
+})(({ theme }) => ({
+  margin: theme.spacing(1, 0, 2),
+}));
+
+const StyledListItem = styled(ListItem, {
+  label: "StyledListItem",
+})(({ theme }) => ({
+  marginBottom: theme.spacing(1),
+  padding: theme.spacing(1.5),
+  border: `0.5px solid ${theme.palette.grey[300]}`,
+  borderRadius: theme.shape.borderRadius,
+}));
+
+const StyledAvatar = styled(Avatar, {
+  label: "StyledAvatar",
+})(({ theme }) => ({
+  width: "4rem",
+  height: "4rem",
+  border: `0.5px solid ${theme.palette.grey[300]}`,
 }));
 
 const StyledListItemText = styled(ListItemText, {
   label: "StyledListItemText",
 })(() => ({
+  margin: 0,
   // Text overflow shouldn't be a huge problem with GH username's max character limit of 39,
   // but I'm erring on the side of caution here
   "& .MuiTypography-root": {
@@ -178,6 +203,16 @@ const StyledListItemText = styled(ListItemText, {
     textOverflow: "ellipsis",
   },
 }));
+
+const StyledChip = styled(Chip, {
+  label: "StyledChip",
+})(({ theme }) => ({
+  borderWidth: 0.5,
+  borderRadius: theme.shape.borderRadius,
+}));
+
+const DEBOUNCE_AMOUNT_MS = 2000;
+const UI_WIDTH_PX = 500;
 
 const schema = object()
   .shape({
@@ -190,7 +225,6 @@ type Inputs = InferType<typeof schema>;
 const defaultValues: Inputs = {
   userName: "",
 };
-const DEBOUNCE_AMOUNT_MS = 2000;
 
 function App() {
   const [userName, setUserName] = useState("");
@@ -221,40 +255,39 @@ function App() {
   }, [isValidating, isValid, submitForm]);
 
   return (
-    <Container>
-      <Stack justifyContent="space-between" alignItems="stretch">
-        <Typography variant="h3" mb="1rem">
-          GitHub user search
-        </Typography>
-        <Typography variant="h5" mb="3rem">
-          Narvi recruitment assignment
-        </Typography>
+    <AppContainer>
+      <Typography variant="h4" sx={{ mb: 1.5 }}>
+        GitHub user search
+      </Typography>
+      <Typography variant="subtitle1" sx={{ mb: 6 }}>
+        Narvi recruitment assignment
+      </Typography>
 
-        <Stack direction="row" justifyContent="center">
-          <StyledForm>
-            <TextField
-              fullWidth
-              label="GitHub username"
-              error={!!errors.userName}
-              helperText={errors.userName?.message}
-              {...register("userName")}
-            />
-          </StyledForm>
-        </Stack>
+      <StyledForm>
+        <TextField
+          fullWidth
+          label="GitHub username"
+          error={!!errors.userName}
+          helperText={errors.userName?.message}
+          {...register("userName")}
+        />
+      </StyledForm>
 
-        <Typography variant="h5" mb="2rem">
-          Results:
-        </Typography>
-        <Results userName={userName} />
-      </Stack>
-    </Container>
+      <Results userName={userName} />
+    </AppContainer>
   );
 }
 
 export default App;
 
-const StyledForm = styled("form", { label: "StyledForm" })(() => ({
-  marginBottom: "3rem",
-  maxWidth: 450,
+const AppContainer = styled(Stack, { label: "AppContainer" })(() => ({
   flexGrow: 1,
+  maxWidth: UI_WIDTH_PX,
+  // Not very likely to happen, but adding this to make sure
+  // extremely long strings don't overflow UI's `maxWidth`
+  wordBreak: "break-word",
+}));
+
+const StyledForm = styled("form", { label: "StyledForm" })(({ theme }) => ({
+  marginBottom: theme.spacing(6),
 }));

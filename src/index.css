@@ -1,4 +1,6 @@
 #root {
-  padding: 4rem 0rem;
+  display: flex;
+  justify-content: center;
+  padding: 3rem 1rem;
   text-align: center;
 }
