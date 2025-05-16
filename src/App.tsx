@@ -47,7 +47,6 @@ function App() {
 
   useEffect(() => {
     if (!isValidating && isValid) {
-      console.log("(useEffect) submitting form!");
       submitForm();
     }
   }, [isValidating, isValid, submitForm]);

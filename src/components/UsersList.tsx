@@ -34,18 +34,14 @@ export function UsersList({
 }: Props) {
   const loadMoreUsers = async () => {
     if (isFetchNextPageError) {
-      console.log("(loadMoreUsers) there was an error fetching the next page");
       return;
     }
 
     if (isFetchingNextPage) {
-      console.log("(loadMoreUsers) another fetch in progress, stopping the fn");
       return;
     }
 
-    console.log("(loadMoreUsers) loading...");
     await fetchNextPage();
-    console.log("(loadMoreUsers) more users loaded!");
   };
 
   return (

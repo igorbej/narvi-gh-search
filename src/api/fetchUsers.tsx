@@ -12,13 +12,11 @@ export async function fetchUsers(
   shouldUseMockData: boolean,
   signal: AbortSignal
 ): Promise<SuccessApiResponse> {
-  console.warn(
+  console.log(
     `(fetchUsers) fetching users for query: "${userName}", page: ${page}`
   );
 
   if (shouldUseMockData) {
-    console.log("(fetchUsers) using MOCKED data!");
-
     const data = {
       ...mockApiResponse,
       items: mockApiResponse.items.map((el) => ({
@@ -32,11 +30,9 @@ export async function fetchUsers(
       const dataValidated = await successApiResponseSchema.validate(data);
       return dataValidated;
     } catch (e) {
-      console.log("yup validation error:", e);
+      console.error("yup validation error:", e);
     }
   }
-
-  console.log("(fetchUsers) fetching REAL data from GitHub!");
 
   const response = await fetch(
     `${GH_API_URL}/search/users?q=${userName}&page=${page}`,
