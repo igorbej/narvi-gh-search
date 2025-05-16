@@ -44,7 +44,7 @@ export function Results({ userName }: Props) {
 
   if (isFetching && !isFetchingNextPage) {
     return (
-      <ResultsAlert>Looking for users matching "${userName}"...</ResultsAlert>
+      <ResultsAlert>Looking for users matching "{userName}"...</ResultsAlert>
     );
   }
 

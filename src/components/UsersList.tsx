@@ -94,7 +94,7 @@ export function UsersList({
         <ResultsAlert>There are no more users matching the query.</ResultsAlert>
       )}
       {isFetchNextPageError && (
-        <ResultsAlert severity="warning" title="Error fetching the next page!">
+        <ResultsAlert severity="error" title="Error fetching the next page!">
           Error: {error?.message}
         </ResultsAlert>
       )}
