@@ -21,7 +21,6 @@ export async function fetchUsers(
       ...mockApiResponse,
       items: mockApiResponse.items.map((el) => ({
         ...el,
-        id: el.id + page, // Making mock data's repeated ids unique to make them valid React keys
       })),
       nextPage: page < 10 ? page + 1 : undefined,
     };

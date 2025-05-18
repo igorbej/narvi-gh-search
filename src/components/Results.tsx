@@ -91,6 +91,7 @@ export function Results({ userName }: Props) {
         isFetchNextPageError={isFetchNextPageError}
         error={error}
         users={users}
+        isUsingMockData={shouldUseMockData}
       />
     </Stack>
   );

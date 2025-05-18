@@ -22,6 +22,7 @@ type Props = Pick<
   | "error"
 > & {
   users: User[];
+  isUsingMockData: boolean;
 };
 
 export function UsersList({
@@ -31,6 +32,7 @@ export function UsersList({
   isFetchNextPageError,
   error,
   users,
+  isUsingMockData,
 }: Props) {
   const loadMoreUsers = async () => {
     if (isFetchNextPageError) {
@@ -47,14 +49,18 @@ export function UsersList({
   return (
     <>
       <StyledInfiniteScroll
-        pageStart={0} // TODO: look into this
+        pageStart={0}
         loadMore={loadMoreUsers}
         hasMore={hasNextPage && !isFetchNextPageError}
         loader={<CircularProgress key="loader-key" size="1.5rem" />}
       >
         <List>
-          {users.map(({ id, login, type, avatar_url, html_url }) => (
-            <StyledListItem key={id} alignItems="flex-start">
+          {users.map(({ id, login, type, avatar_url, html_url }, idx) => (
+            <StyledListItem
+              // Making mock data's repeated ids unique
+              key={isUsingMockData ? `${id}-${idx}` : id}
+              alignItems="flex-start"
+            >
               <ListItemAvatar sx={{ m: 0, mr: 1.5 }}>
                 <StyledAvatar alt={login} src={avatar_url} />
               </ListItemAvatar>
