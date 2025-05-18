@@ -1,9 +1,11 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
+import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import { fetchUsers } from "../api/fetchUsers";
 import { ResultsAlert } from "./ResultsAlert";
 import { UsersList } from "./UsersList";
+import { getUsersMetadata } from "./utils/getUsersMetadata";
 
 // Adding a mock variant to not exhaust GitHub's API limits too frequently in dev
 const shouldUseMockData = false;
@@ -33,6 +35,7 @@ export function Results({ userName }: Props) {
     getNextPageParam: (lastPage) => lastPage.nextPage,
   });
   const users = data?.pages.flatMap((page) => page.items);
+  const metadata = getUsersMetadata(users);
 
   if (isError && !isFetchNextPageError) {
     return (
@@ -69,6 +72,12 @@ export function Results({ userName }: Props) {
       <Typography variant="h5">
         Results for: <b>"{userName}"</b>
       </Typography>
+      <Box>
+        <Typography variant="caption">
+          users: {metadata?.regularUsers} | organizations:{" "}
+          {metadata?.organizations} | admins: {metadata?.admins}
+        </Typography>
+      </Box>
       {shouldUseMockData && (
         <Typography variant="caption">
           ⚠️ Note: displaying hard-coded mock data
