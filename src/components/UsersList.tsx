@@ -67,6 +67,7 @@ export function UsersList({
                       variant="body2"
                       color="textSecondary"
                       fontSize="0.75rem"
+                      aria-label="GitHub user ID"
                     >
                       {id}
                     </Typography>
@@ -74,12 +75,16 @@ export function UsersList({
                       variant="body2"
                       href={html_url}
                       display="block" // Making sure links can get ellipsized too, if need be
+                      aria-label="GitHub profile link"
                     >
                       {html_url}
                     </Link>
                   </>
                 }
                 slots={{ secondary: "div" }}
+                slotProps={{
+                  primary: { "aria-label": "GitHub username" },
+                }}
               />
               <StyledChip label={type} variant="outlined" size="small" />
             </StyledListItem>
