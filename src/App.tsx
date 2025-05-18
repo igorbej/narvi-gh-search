@@ -53,24 +53,26 @@ function App() {
 
   return (
     <AppContainer>
-      <Typography variant="h4" sx={{ mb: 1.5 }}>
-        GitHub user search
-      </Typography>
-      <Typography variant="subtitle1" sx={{ mb: 6 }}>
-        Narvi recruitment assignment
-      </Typography>
+      <Stack>
+        <Typography variant="h4" sx={{ mb: 1.5 }}>
+          GitHub user search
+        </Typography>
+        <Typography variant="subtitle1" sx={{ mb: 6 }}>
+          Narvi recruitment assignment
+        </Typography>
 
-      <StyledForm>
-        <TextField
-          fullWidth
-          label="GitHub username"
-          error={!!errors.userName}
-          helperText={errors.userName?.message}
-          {...register("userName")}
-        />
-      </StyledForm>
+        <StyledForm>
+          <TextField
+            fullWidth
+            label="GitHub username"
+            error={!!errors.userName}
+            helperText={errors.userName?.message}
+            {...register("userName")}
+          />
+        </StyledForm>
 
-      <Results userName={userName} />
+        <Results userName={userName} />
+      </Stack>
     </AppContainer>
   );
 }
@@ -78,8 +80,8 @@ function App() {
 export default App;
 
 const AppContainer = styled(Stack, { label: "AppContainer" })(() => ({
-  flexGrow: 1,
   maxWidth: UI_WIDTH_PX,
+  margin: "0 auto",
   // Not very likely to happen, but adding this to make sure
   // extremely long strings don't overflow UI's `maxWidth`
   wordBreak: "break-word",

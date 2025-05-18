@@ -81,7 +81,7 @@ export function UsersList({
                     </Link>
                   </>
                 }
-                slots={{ secondary: "div" }}
+                slots={{ primary: "div", secondary: "div" }}
                 slotProps={{
                   primary: { "aria-label": "GitHub username" },
                 }}
@@ -130,13 +130,15 @@ const StyledListItemText = styled(ListItemText, {
   label: "StyledListItemText",
 })(() => ({
   margin: 0,
+  minWidth: "50px",
   // Text overflow shouldn't be a huge problem with GH username's max character limit of 39,
   // but I'm erring on the side of caution here
-  "& .MuiTypography-root": {
-    whiteSpace: "nowrap",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-  },
+  "& .MuiListItemText-primary, .MuiListItemText-secondary, .MuiTypography-root":
+    {
+      whiteSpace: "nowrap",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+    },
 }));
 
 const StyledChip = styled(Chip, {
