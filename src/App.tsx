@@ -8,6 +8,7 @@ import Typography from "@mui/material/Typography";
 import { styled } from "@mui/material/styles";
 import { useDebounce } from "./hooks/useDebounce";
 import { Results } from "./components/Results";
+import { DebounceProgressBar } from "./components/DebounceProgressBar";
 
 const DEBOUNCE_AMOUNT_MS = 2000;
 const UI_WIDTH_PX = 500;
@@ -26,6 +27,7 @@ const defaultValues: Inputs = {
 
 function App() {
   const [userName, setUserName] = useState("");
+  const [debounceEndTimestamp, setDebounceEndTimestamp] = useState<number>();
   const {
     register,
     handleSubmit,
@@ -39,7 +41,17 @@ function App() {
   const onSubmit: SubmitHandler<Inputs> = useCallback((data) => {
     setUserName(data.userName);
   }, []);
-  const onSubmitDebounced = useDebounce(onSubmit, DEBOUNCE_AMOUNT_MS);
+
+  const onDebounceEvent = useCallback((endTimestamp: number | undefined) => {
+    setDebounceEndTimestamp(endTimestamp);
+  }, []);
+
+  const onSubmitDebounced = useDebounce(
+    onSubmit,
+    DEBOUNCE_AMOUNT_MS,
+    onDebounceEvent
+  );
+
   const submitForm = useMemo(
     () => handleSubmit(onSubmitDebounced),
     [handleSubmit, onSubmitDebounced]
@@ -69,6 +81,7 @@ function App() {
             helperText={errors.userName?.message}
             {...register("userName")}
           />
+          <DebounceProgressBar debounceEndTimestamp={debounceEndTimestamp} />
         </StyledForm>
 
         <Results userName={userName} />
@@ -80,10 +93,10 @@ function App() {
 export default App;
 
 const AppContainer = styled(Stack, { label: "AppContainer" })(() => ({
-  maxWidth: UI_WIDTH_PX,
   margin: "0 auto",
+  maxWidth: UI_WIDTH_PX,
   // Not very likely to happen, but adding this to make sure
-  // extremely long strings don't overflow UI's `maxWidth`
+  // extremely long strings don't overflow the UI's `maxWidth` above
   wordBreak: "break-word",
 }));
 
