@@ -31,6 +31,7 @@ export function Results({ userName }: Props) {
       await fetchUsers(userName, pageParam, shouldUseMockData, signal),
     enabled: userName.length > 0,
     retry: false, // Curbing our assault on GitHub's API a bit
+    refetchOnWindowFocus: false,
     initialPageParam: 1, // GitHub's pagination starts at 1
     getNextPageParam: (lastPage) => lastPage.nextPage,
   });

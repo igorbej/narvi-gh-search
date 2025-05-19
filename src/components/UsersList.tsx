@@ -61,7 +61,7 @@ export function UsersList({
               key={isUsingMockData ? `${id}-${idx}` : id}
               alignItems="flex-start"
             >
-              <ListItemAvatar sx={{ m: 0, mr: 1.5 }}>
+              <ListItemAvatar sx={{ m: 0 }}>
                 <StyledAvatar alt={login} src={avatar_url} />
               </ListItemAvatar>
 
@@ -134,8 +134,8 @@ const StyledAvatar = styled(Avatar, {
 
 const StyledListItemText = styled(ListItemText, {
   label: "StyledListItemText",
-})(() => ({
-  margin: 0,
+})(({ theme }) => ({
+  margin: `0 ${theme.spacing(1.5)}`,
   minWidth: "50px",
   // Text overflow shouldn't be a huge problem with GH username's max character limit of 39,
   // but I'm erring on the side of caution here
