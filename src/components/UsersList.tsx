@@ -2,7 +2,7 @@ import InfiniteScroll from "react-infinite-scroller";
 import Typography from "@mui/material/Typography";
 import Chip from "@mui/material/Chip";
 import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
+import ListItem, { type ListItemProps } from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
 import ListItemAvatar from "@mui/material/ListItemAvatar";
 import Avatar from "@mui/material/Avatar";
@@ -55,46 +55,53 @@ export function UsersList({
         loader={<CircularProgress key="loader-key" size="1.5rem" />}
       >
         <List>
-          {users.map(({ id, login, type, avatar_url, html_url }, idx) => (
-            <StyledListItem
-              // Making mock data's repeated ids unique
-              key={isUsingMockData ? `${id}-${idx}` : id}
-              alignItems="flex-start"
-            >
-              <ListItemAvatar sx={{ m: 0 }}>
-                <StyledAvatar alt={login} src={avatar_url} />
-              </ListItemAvatar>
+          {users.map(
+            ({ id, login, type, avatar_url, html_url, site_admin }, idx) => (
+              <StyledListItem
+                // Making mock data's repeated ids unique
+                key={isUsingMockData ? `${id}-${idx}` : id}
+                isSiteAdmin={site_admin}
+              >
+                <ListItemAvatar sx={{ m: 0 }}>
+                  <StyledAvatar alt={login} src={avatar_url} />
+                </ListItemAvatar>
 
-              <StyledListItemText
-                primary={login}
-                secondary={
-                  <>
-                    <Typography
-                      variant="body2"
-                      color="textSecondary"
-                      fontSize="0.75rem"
-                      aria-label="GitHub user ID"
-                    >
-                      {id}
-                    </Typography>
-                    <Link
-                      variant="body2"
-                      href={html_url}
-                      display="block" // Making sure links can get ellipsized too, if need be
-                      aria-label="GitHub profile link"
-                    >
-                      {html_url}
-                    </Link>
-                  </>
-                }
-                slots={{ primary: "div", secondary: "div" }}
-                slotProps={{
-                  primary: { "aria-label": "GitHub username" },
-                }}
-              />
-              <StyledChip label={type} variant="outlined" size="small" />
-            </StyledListItem>
-          ))}
+                <StyledListItemText
+                  primary={login}
+                  secondary={
+                    <>
+                      <Typography
+                        variant="body2"
+                        color="textSecondary"
+                        fontSize="0.75rem"
+                        aria-label="GitHub user ID"
+                      >
+                        {id}
+                      </Typography>
+                      <Link
+                        variant="body2"
+                        href={html_url}
+                        display="block" // Making sure links can get ellipsized too, if need be
+                        aria-label="GitHub profile link"
+                      >
+                        {html_url}
+                      </Link>
+                    </>
+                  }
+                  slots={{ primary: "div", secondary: "div" }}
+                  slotProps={{
+                    primary: { "aria-label": "GitHub username" },
+                  }}
+                />
+                <StyledChip
+                  variant="outlined"
+                  size="small"
+                  label={site_admin ? "Admin" : type}
+                  {...(site_admin && { color: "secondary" })}
+                />
+              </StyledListItem>
+            )
+          )}
         </List>
       </StyledInfiniteScroll>
       {!hasNextPage && (
@@ -115,12 +122,20 @@ const StyledInfiniteScroll = styled(InfiniteScroll, {
   margin: theme.spacing(1, 0, 2),
 }));
 
+interface StyledListItemProps extends ListItemProps {
+  isSiteAdmin: boolean;
+}
+
 const StyledListItem = styled(ListItem, {
   label: "StyledListItem",
-})(({ theme }) => ({
+  shouldForwardProp: (prop) => prop !== "isSiteAdmin", // Make sure there's no attempt to add the custom prop to the DOM
+})<StyledListItemProps>(({ theme, isSiteAdmin }) => ({
+  alignItems: "flex-start",
   marginBottom: theme.spacing(1),
   padding: theme.spacing(1.5),
-  border: `0.5px solid ${theme.palette.grey[300]}`,
+  border: isSiteAdmin
+    ? `1px solid ${theme.palette.secondary.main}`
+    : `0.5px solid ${theme.palette.grey[300]}`,
   borderRadius: theme.shape.borderRadius,
 }));
 
